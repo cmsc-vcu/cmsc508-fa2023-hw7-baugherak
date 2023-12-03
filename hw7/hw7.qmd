@@ -1,6 +1,6 @@
 ---
 title: Homework 7 - Creating a resume database
-author: (your name goes here!)
+author: Abigail Baugher
 date: last-modified
 format:
     html:
@@ -10,11 +10,10 @@ format:
         code-copy: true
 ---
 
-(include a brief description of what is in this document)
+Creating a database using DDL
 
-(Please clean up any comments that I included.  This is a scaffold document.)
 
-GITHUB URL:  <your URL goes here!>
+GITHUB URL:  <https://github.com/cmsc-vcu/cmsc508-fa2023-hw7-baugherak.git>
 
 ```{python}
 #| eval: true
@@ -92,11 +91,11 @@ except Exception as e:
 
 ## Overview and description
 
-(briefly describe the project and the database)
+The database represents a company-wide resume capturing the collective skills and certifications of all the people in your company.The database captures skills, employees and their roles within the company.
 
 ## Crows-foot diagram
 
-(add a description of the diagram and what the reader is seeing.)
+The Crows-foot diagram below has three entities: Customer, Order, and Delivery Address. The Customer has the attributes of id, first name, and last name. The Delivery Address has the attribute of id. A customer can place one or many orders, however, an order can only be placed by one customer. The customer can use one or many delivery addresses and delivery addresses may be used my many customers.
 
 ```{mermaid}
 %%| echo: false
@@ -117,9 +116,19 @@ erDiagram
 
 For the people, skills, and roles tables, provide a description of each table and it's contents. Then provide a listing of the entire table.
 
+skills( id,name, description, tag, url, time_commitment)
+
+people( id,first_name, last_name, email, linkedin_url, headshot_url, discord_handle, brief_bio, date_joined)
+
+peopleskills( id, skills_id, people_id, date_acquired )
+
+roles( id, name, sort_priority)
+
+people_roles( id, people_id, role_id, date_role_acquired )
+
 ### People table
 
-The *people* table contains elements that describe ... 
+The *people* table contains elements that describe a persons id, first name, last name, email, LinkedIn URL, headshot URL, Discord username, a brief bio, and a date joined.
 
 Below is a list of data in the *people* table.
 
@@ -142,28 +151,48 @@ df
 
 ### Skills table
 
-The *skills* table contains elements that describe ... 
+The *skills* table contains elements that describe the skills id, name, description, tag, URL, and time commitment.
 
 Below is a list of data in the *skills* table.
 
 ```{python}
 #| echo: false
 #| eval: true
-
+sql = f"""
+select * from skills;
+"""
 ## Add code to list roles table here
+try:
+    df = pd.read_sql(sql,cnx)
+    df
+except Exception as e:
+    message = str(e)
+    print(f"An error occurred:\n\n{message}\n\nIgnoring and moving on.")
+    df = pd.DataFrame()
+df
 ```
 
 ### Roles table
 
-The *roles* table contains elements that describe ... 
+The *roles* table contains elements that describe a roles id, name, and sort priority.
 
 Below is a list of data in the *roles* table.
 
 ```{python}
 #| echo: false
 #| eval: true
-
+sql = f"""
+select * from roles;
+"""
 ## Add code to list roles table here
+try:
+    df = pd.read_sql(sql,cnx)
+    df
+except Exception as e:
+    message = str(e)
+    print(f"An error occurred:\n\n{message}\n\nIgnoring and moving on.")
+    df = pd.DataFrame()
+df
 ```
 
 
@@ -200,30 +229,191 @@ df
 
 
 ### List people names and email addresses ordered by last_name
-
+```{python}
+#| echo: false
+#| eval: true
+sql = """
+SELECT people_first_name, people_last_name, people_email
+FROM people
+ORDER BY people_last_name;
+"""
+## Add code to list roles table here
+try:
+    df = pd.read_sql(sql,cnx)
+    df
+except Exception as e:
+    message = str(e)
+    print(f"An error occurred:\n\n{message}\n\nIgnoring and moving on.")
+    df = pd.DataFrame()
+df
+```
 
 ### List skill names of Person 1
+```{python}
+#| echo: false
+#| eval: true
+sql = """
+SELECT s.skills_name
+FROM skills s
+JOIN peopleskills ps ON s.skills_id = ps.peopleskills_skills_id
+JOIN people p ON ps.peopleskills_people_id = p.people_id
+WHERE p.people_id = 1;
+"""
 
+## Add code to list roles table here
+try:
+    df = pd.read_sql(sql,cnx)
+    df
+except Exception as e:
+    message = str(e)
+    print(f"An error occurred:\n\n{message}\n\nIgnoring and moving on.")
+    df = pd.DataFrame()
+df
+```
 
 ### List people names with Skill 6
+```{python}
+#| echo: false
+#| eval: true
+sql = """
+SELECT p.people_first_name, p.people_last_name
+FROM people p
+JOIN peopleskills ps ON p.people_id = ps.peopleskills_people_id
+JOIN skills s ON ps.peopleskills_skills_id = s.skills_id
+WHERE s.skills_id = 6;
+"""
 
+## Add code to list roles table here
+try:
+    df = pd.read_sql(sql,cnx)
+    df
+except Exception as e:
+    message = str(e)
+    print(f"An error occurred:\n\n{message}\n\nIgnoring and moving on.")
+    df = pd.DataFrame()
+df
+```
 
 ### List people with a DEVELOPER role
+```{python}
+#| echo: false
+#| eval: true
+sql = """
+SELECT p.people_first_name, p.people_last_name
+FROM people p
+JOIN peopleroles pr ON p.people_id = pr.peopleroles_people_id
+JOIN roles r ON pr.peopleroles_role_id = r.roles_id
+WHERE r.roles_name = 'Developer';
+"""
 
+
+## Add code to list roles table here
+try:
+    df = pd.read_sql(sql,cnx)
+    df
+except Exception as e:
+    message = str(e)
+    print(f"An error occurred:\n\n{message}\n\nIgnoring and moving on.")
+    df = pd.DataFrame()
+df
+```
 
 ### List names and email addresses of people without skills
+```{python}
+#| echo: false
+#| eval: true
+sql = """
+SELECT p.people_first_name, p.people_last_name, p.people_email
+FROM people p
+LEFT JOIN peopleskills ps ON p.people_id = ps.peopleskills_people_id
+WHERE ps.peopleskills_id IS NULL;
+"""
 
+
+## Add code to list roles table here
+try:
+    df = pd.read_sql(sql,cnx)
+    df
+except Exception as e:
+    message = str(e)
+    print(f"An error occurred:\n\n{message}\n\nIgnoring and moving on.")
+    df = pd.DataFrame()
+df
+```
 
 ### List names and tags of unused skills
+```{python}
+#| echo: false
+#| eval: true
+sql = """
+SELECT s.skills_name, s.skills_tag
+FROM skills s
+LEFT JOIN peopleskills ps ON s.skills_id = ps.peopleskills_skills_id
+WHERE ps.peopleskills_id IS NULL;
+"""
 
+
+## Add code to list roles table here
+try:
+    df = pd.read_sql(sql,cnx)
+    df
+except Exception as e:
+    message = str(e)
+    print(f"An error occurred:\n\n{message}\n\nIgnoring and moving on.")
+    df = pd.DataFrame()
+df
+```
 
 ### List people names and skill names with the BOSS role
+```{python}
+#| echo: false
+#| eval: true
+sql = """
+SELECT p.people_first_name, p.people_last_name, s.skills_name
+FROM people p
+JOIN peopleroles pr ON p.people_id = pr.peopleroles_people_id
+JOIN roles r ON pr.peopleroles_role_id = r.roles_id
+LEFT JOIN peopleskills ps ON p.people_id = ps.peopleskills_people_id
+LEFT JOIN skills s ON ps.peopleskills_skills_id = s.skills_id
+WHERE r.roles_name = 'Boss';
+"""
 
+
+## Add code to list roles table here
+try:
+    df = pd.read_sql(sql,cnx)
+    df
+except Exception as e:
+    message = str(e)
+    print(f"An error occurred:\n\n{message}\n\nIgnoring and moving on.")
+    df = pd.DataFrame()
+df
+```
 
 ### List ids and names of unused roles
+```{python}
+#| echo: false
+#| eval: true
+sql = """
+SELECT r.roles_id, r.roles_name
+FROM roles r
+LEFT JOIN peopleroles pr ON r.roles_id = pr.peopleroles_role_id
+WHERE pr.peopleroles_id IS NULL;
+"""
 
+
+## Add code to list roles table here
+try:
+    df = pd.read_sql(sql,cnx)
+    df
+except Exception as e:
+    message = str(e)
+    print(f"An error occurred:\n\n{message}\n\nIgnoring and moving on.")
+    df = pd.DataFrame()
+df
+```
 
 ## Reflection
 
-(Write a paragraph expressing your thoughts, feelings, and insights about your experience with this assignment.  Pause and breath before writing - I'm trying to encourage critical thinking and self-awareness while allowing you to explore the connections between theory and practice. And yes, delete this paragraph.)
+I struggled with this assignment a LOT. First my powershell was not recognizing poetry, then vs code would not use the cmsc508-fa2023-hw7-template virtual machine, and since I had created only 6 people, the foreign keys would not work. I am long overdue for the submission of this assignment, but I felt it that it was important moving forward and finishing the rest of the class.
 
